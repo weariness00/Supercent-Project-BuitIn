@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using Customer;
 using Game.Bread;
 using UnityEngine;
@@ -11,10 +12,8 @@ namespace Game
         public StackUtil<BreadBase> hasBreadStack = new(10, true);
         public Transform[] breadStandTransformArray;
 
-        public MinMaxValue<int> hasCustomerCount = new (0,0,10);
+        public CustomerContainer customerContainer;
         public float customerWaitRadius = 1f;
-
-        [HideInInspector] public int customerCount = 0;
 
         public void Awake()
         {
@@ -22,24 +21,21 @@ namespace Game
             {
                 bread.PutBreadMove(breadStandTransformArray[hasBreadStack.Count - 1], Vector3.zero, null);
             };
-        }
-
-        public bool TryAddCustomer(CustomerBase customer)
-        {
-            if (hasCustomerCount.IsMax) return false;
-            hasCustomerCount.Current++;
-            customerCount++;
-            customer.agent.SetDestination(GetAroundPosition());
             
-            return true;
+            customerContainer.onAddCustomerEvent.AddListener(customer =>
+            {
+                customer.agent.SetDestination(GetAroundPosition());
+            });
         }
 
-        public bool TryPopCustomer(CustomerBase customer)
+        public void FixedUpdate()
         {
-            if (hasCustomerCount.IsMin) return false;
-            hasCustomerCount.Current--;
-
-            return true;
+            if (customerContainer.IsHas && hasBreadStack.Count != 0)
+            {
+                var bread = hasBreadStack.Pop();
+                var customer = customerContainer.AnyCustomer;
+                customer.hasBreadStack.Push(bread);
+            }
         }
 
         public Vector3 GetAroundPosition()
@@ -48,8 +44,8 @@ namespace Game
             // hasBreadStack 길이만큼 나누어서 배분
             // 구형이 아닌 box형에 가깝게 해주어야함
 
-            float interval = 360f / hasCustomerCount.Max;
-            float delta = (customerCount % hasCustomerCount.Max) * interval;
+            float interval = 360f / customerContainer.Count.Max;
+            float delta = (customerContainer.totalCustomer % customerContainer.Count.Max) * interval;
             float angleInRadians = delta * Mathf.Deg2Rad; // 각도를 라디안으로 변환
             float x = customerWaitRadius * Mathf.Sin(angleInRadians); // x 좌표
             float z = customerWaitRadius * Mathf.Cos(angleInRadians); // z 좌표

@@ -56,8 +56,7 @@ namespace Customer
                 bread.GetBreadMove(stackTransform, new Vector3(0, (hasBreadStack.Count - 1) * bread.skinnedMeshRenderer.localBounds.extents.y * 2f, 0));
                 if (hasBreadStack.IsMax)
                 {
-                    targetDisplayStand = FindObjectOfType<DisplayStand>();
-                    targetDisplayStand.TryPopCustomer(this);
+
                     GoCounter();
                 }
             };
@@ -82,16 +81,16 @@ namespace Customer
                 delayPushPop.Current += Time.deltaTime;
             if (delayPushPop.IsMax)
             {
-                if (other.CompareTag("Display Stand") && 
-                    other.TryGetComponent(out DisplayStand displayStand) &&
-                    !hasBreadStack.IsMax &&
-                    displayStand.hasBreadStack.TryPeek(out var bread) &&
-                    !bread.isMove)
-                {
-                    delayPushPop.SetMin();
-                    displayStand.hasBreadStack.Pop();
-                    hasBreadStack.Push(bread);
-                }
+                // if (other.CompareTag("Display Stand") && 
+                //     other.TryGetComponent(out DisplayStand displayStand) &&
+                //     !hasBreadStack.IsMax &&
+                //     displayStand.hasBreadStack.TryPeek(out var bread) &&
+                //     !bread.isMove)
+                // {
+                //     delayPushPop.SetMin();
+                //     displayStand.hasBreadStack.Pop();
+                //     hasBreadStack.Push(bread);
+                // }
             }
         }
 
@@ -116,7 +115,7 @@ namespace Customer
         public void GoDisplayStand()
         {
             targetDisplayStand = FindObjectOfType<DisplayStand>();
-            targetDisplayStand.TryAddCustomer(this);
+            targetDisplayStand.customerContainer.TryAddCustomer(this);
             agent.stoppingDistance = 1.5f;
         }
 
@@ -124,6 +123,9 @@ namespace Customer
         {
             if (isItemSelectionDone == false)
             {
+                targetDisplayStand = FindObjectOfType<DisplayStand>();
+                targetDisplayStand.customerContainer.TryAddCustomer(this);
+                
                 agent.stoppingDistance = 0;
                 isItemSelectionDone = true;
                 ui.ChangeCounterState();
