@@ -15,7 +15,7 @@ namespace Player
 
         public void Update()
         {
-            SetIsMove(player.movementControlControl.isMove);
+            SetIsMove(player.movementControl.isMove);
             SetHasStack(player.HasStack);
         }
     }

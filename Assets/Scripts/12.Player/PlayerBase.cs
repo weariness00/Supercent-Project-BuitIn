@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Customer;
 using Game;
 using Game.Bread;
 using Game.Dining;
 using Game.Money;
 using UnityEngine;
-using UnityEngine.Serialization;
 using User;
 using Util;
 
@@ -16,37 +12,37 @@ namespace Player
 {
     public class PlayerBase : MonoBehaviour
     {
-        [FormerlySerializedAs("movementControl")] [HideInInspector] public PlayerMovementControl movementControlControl;
+        [HideInInspector] public PlayerMovementControl movementControl;
         [HideInInspector] public PlayerCameraControl cameraControl;
         [HideInInspector] public PlayerAnimatorControl animatorControl;
 
-        [Header("Stack 관련")] 
-        public MinMaxValue<float> delayPushPop; // Stack에 Push되거나 Pop되는 딜레이
+        [Header("Stack 관련")]
+        public BreadContainer breadContainer;
         public MinMaxValue<float> moneyDelayTimer;
         public Transform stackTransform;
-        public StackUtil<BreadBase> hasBreadStack = new(10, true);
+        private Stack<BreadBase> hasBreadStack = new(10);
         public bool HasStack => hasBreadStack.Count != 0;
 
         public void Awake()
         {
-            movementControlControl = GetComponentInChildren<PlayerMovementControl>();
+            movementControl = GetComponentInChildren<PlayerMovementControl>();
             cameraControl = GetComponentInChildren<PlayerCameraControl>();
             animatorControl = GetComponentInChildren<PlayerAnimatorControl>();
 
-            hasBreadStack.onPushEvent += bread =>
+            breadContainer.onAddEvent.AddListener(bread =>
             {
+                hasBreadStack.Push(bread);
                 var originPos = bread.transform.position;
                 bread.transform.SetParent(stackTransform, false);
                 bread.transform.position = originPos;
                 bread.GetBreadMove(stackTransform,new Vector3(0, (hasBreadStack.Count - 1) * bread.skinnedMeshRenderer.localBounds.extents.y * 2f, 0));
-            };
+            });
         }
 
         public void OnTriggerEnter(Collider other)
         {
             if (other.gameObject.layer == LayerMask.NameToLayer("Area"))
             {
-                delayPushPop.SetMin();
                 moneyDelayTimer.SetMin();
                 if (other.TryGetComponent(out IArea area))
                     area.AreaEnter();
@@ -57,32 +53,29 @@ namespace Player
         {
             if (other.gameObject.layer == LayerMask.NameToLayer("Area"))
             {
-                delayPushPop.Current += Time.deltaTime;
                 moneyDelayTimer.Current += Time.deltaTime;
             }
             
-            if (delayPushPop.IsMax)
+            BreadBase bread;
+            // 빵 생성기
+            if (other.CompareTag("Generate Bread") && 
+                other.TryGetComponent(out GenerateBread generateBread) &&
+                generateBread.hasBreadStack.TryPeek(out bread) &&
+                breadContainer.TryAdd(bread))
             {
-                delayPushPop.SetMin();
-                BreadBase bread;
-                // 빵 생성기
-                if (other.CompareTag("Generate Bread") && 
-                    other.TryGetComponent(out GenerateBread generateBread) &&
-                    !hasBreadStack.IsMax &&
-                    generateBread.hasBreadStack.TryPop(out bread))
-                {
-                    hasBreadStack.Push(bread);
-                }
-                // 진열대
-                else if (other.CompareTag("Display Stand") && 
-                         other.TryGetComponent(out DisplayStand displayStand) &&
-                         !displayStand.hasBreadStack.IsMax &&
-                         hasBreadStack.TryPop(out bread))
-                {
-                    displayStand.hasBreadStack.Push(bread);
-                }
+                generateBread.hasBreadStack.Pop();
+                generateBread.breadContainer.Remove(bread);
             }
-
+            // 진열대
+            else if (other.CompareTag("Display Stand") && 
+                     other.TryGetComponent(out DisplayStand displayStand) &&
+                     hasBreadStack.TryPeek(out bread) &&
+                     displayStand.breadContainer.TryAdd(bread))
+            {
+                hasBreadStack.Pop();
+                breadContainer.Remove(bread);
+            }
+            
             if (moneyDelayTimer.IsMax &&
                 other.CompareTag("Money Bundle") &&
                 other.TryGetComponentInParent(out MoneyBundle moneyBundle) && 

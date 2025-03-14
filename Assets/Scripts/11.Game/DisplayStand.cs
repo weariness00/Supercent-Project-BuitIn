@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using Customer;
 using Game.Bread;
 using UnityEngine;
@@ -9,32 +10,40 @@ namespace Game
 {
     public partial class DisplayStand : MonoBehaviour
     {
-        public StackUtil<BreadBase> hasBreadStack = new(10, true);
+        public BreadContainer breadContainer;
+        private Stack<BreadBase> hasBreadStack = new Stack<BreadBase>(10);
         public Transform[] breadStandTransformArray;
 
         public CustomerContainer customerContainer;
+        private Queue<CustomerBase> hasCustomerQueue = new(3);
         public float customerWaitRadius = 1f;
 
         public void Awake()
         {
-            hasBreadStack.onPushEvent += bread =>
+            breadContainer.onAddEvent.AddListener(bread =>
             {
-                bread.PutBreadMove(breadStandTransformArray[hasBreadStack.Count - 1], Vector3.zero, null);
-            };
+                hasBreadStack.Push(bread);
+                bread.PutBreadMove(breadStandTransformArray[breadContainer.Count - 1], Vector3.zero, null);
+            });
             
-            customerContainer.onAddCustomerEvent.AddListener(customer =>
+            customerContainer.onAddEvent.AddListener(customer =>
             {
-                customer.agent.SetDestination(GetAroundPosition());
+                customer.agent.SetDestination(GetAroundPosition(), () => hasCustomerQueue.Enqueue(customer));
             });
         }
 
-        public void FixedUpdate()
+        public void Update()
         {
-            if (customerContainer.IsHas && hasBreadStack.Count != 0)
+            if (hasCustomerQueue.TryPeek(out var customer) && 
+                hasBreadStack.TryPeek(out var bread) && !bread.isMove && customer.breadContainer.TryAdd(bread))
             {
-                var bread = hasBreadStack.Pop();
-                var customer = customerContainer.AnyCustomer;
-                customer.hasBreadStack.Push(bread);
+                hasBreadStack.Pop();
+                breadContainer.Remove(bread);
+                if (customer.breadContainer.Count.IsMax)
+                {
+                    hasCustomerQueue.Dequeue();
+                    customerContainer.Remove(customer);
+                }
             }
         }
 

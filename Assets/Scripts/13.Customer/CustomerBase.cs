@@ -1,4 +1,5 @@
-﻿using Game;
+﻿using System.Collections.Generic;
+using Game;
 using Game.Bread;
 using Game.Dining;
 using UniRx;
@@ -26,21 +27,19 @@ namespace Customer
         
         [Tooltip("필요한 빵 랜덤 값 범위")] 
         [SerializeField] private MinMax<int> needBreadRange = new(1,3);
-        [HideInInspector] public int needBreadValue;
 
         [Tooltip("Dining Table 관련")] 
         public MinMaxValue<float> eatTimer = new(0, 0, 1);
 
-        [Header("Stack 관련")]
-        public MinMaxValue<float> delayPushPop; // Stack에 Push되거나 Pop되는 딜레이
+        [Header("Stack 관련")] 
+        public BreadContainer breadContainer;
+        private Stack<BreadBase> hasBreadStack = new(10);
         public Transform stackTransform;
-        public StackUtil<BreadBase> hasBreadStack = new(10, true);
         private PaperBag bag;
         
         private DisplayStand targetDisplayStand;
         private Counter counter;
 
-        private bool isItemSelectionDone = false; // 아이템 선택이 끝났을 경우
         [HideInInspector] public bool hasBag = false; // 포장을 가지고 있는 경우
 
         private void Awake()
@@ -50,16 +49,17 @@ namespace Customer
             animator = GetComponentInChildren<Animator>();
             ui = GetComponentInChildren<CustomerUI>();
             
-            hasBreadStack.onPushEvent += bread =>
+            breadContainer.onAddEvent.AddListener(bread =>
             {
+                hasBreadStack.Push(bread);
                 bread.StopAllCoroutines();
-                bread.GetBreadMove(stackTransform, new Vector3(0, (hasBreadStack.Count - 1) * bread.skinnedMeshRenderer.localBounds.extents.y * 2f, 0));
-                if (hasBreadStack.IsMax)
-                {
+                bread.GetBreadMove(stackTransform, new Vector3(0, (breadContainer.Count - 1) * bread.skinnedMeshRenderer.localBounds.extents.y * 2f, 0));
 
+                if (breadContainer.Count.IsMax)
+                {
                     GoCounter();
                 }
-            };
+            });
         }
 
         public void FixedUpdate()
@@ -68,42 +68,15 @@ namespace Customer
             SetStack(hasBreadStack.Count != 0 || hasBag);
         }
 
-        public void OnTriggerEnter(Collider other)
-        {
-            if (other.gameObject.layer == LayerMask.NameToLayer("Area"))
-                delayPushPop.SetMin();
-        }
-
-        public void OnTriggerStay(Collider other)
-        {
-            if(hasBreadStack.IsMax) return;
-            if (other.gameObject.layer == LayerMask.NameToLayer("Area"))
-                delayPushPop.Current += Time.deltaTime;
-            if (delayPushPop.IsMax)
-            {
-                // if (other.CompareTag("Display Stand") && 
-                //     other.TryGetComponent(out DisplayStand displayStand) &&
-                //     !hasBreadStack.IsMax &&
-                //     displayStand.hasBreadStack.TryPeek(out var bread) &&
-                //     !bread.isMove)
-                // {
-                //     delayPushPop.SetMin();
-                //     displayStand.hasBreadStack.Pop();
-                //     hasBreadStack.Push(bread);
-                // }
-            }
-        }
-
         public void Init()
         {
-            isItemSelectionDone = false;
             hasBag = false;
-            type = EnumExtension.Random<CustomerType>(new []{0.7f, 0.3f});
+            type = EnumExtension.Random<CustomerType>(new []{0.8f, 0.2f});
             agent.enabled = true;
 
-            needBreadValue = needBreadRange.Random();
-            hasBreadStack.maxValue = needBreadValue;
+            var needBreadValue = needBreadRange.Random();
             ui.ChangeBreadState(needBreadValue);
+            breadContainer.Count.Max = needBreadValue;
             
             if(bag) Destroy(bag.gameObject);
 
@@ -115,35 +88,21 @@ namespace Customer
         public void GoDisplayStand()
         {
             targetDisplayStand = FindObjectOfType<DisplayStand>();
-            targetDisplayStand.customerContainer.TryAddCustomer(this);
+            targetDisplayStand.customerContainer.TryAdd(this);
             agent.stoppingDistance = 1.5f;
         }
 
         public void GoCounter()
         {
-            if (isItemSelectionDone == false)
-            {
-                targetDisplayStand = FindObjectOfType<DisplayStand>();
-                targetDisplayStand.customerContainer.TryAddCustomer(this);
-                
-                agent.stoppingDistance = 0;
-                isItemSelectionDone = true;
-                ui.ChangeCounterState();
-                switch (type)
-                {
-                    case CustomerType.TakeOut:
-                        counter.hasTakeOutCustomerQueue.Enqueue(this);
-                        break;
-                    case CustomerType.Dining:
-                        counter.hasDiningCustomerQueue.Enqueue(this);
-                        break;
-                }
-                
-            }
+            agent.stoppingDistance = 0;
+            ui.ChangeCounterState();
+
+            counter.customerContainer.TryAdd(this);
         }
 
         public void OutShop()
         {
+            hasBreadStack.Clear();
             happyEmojiEffect.Play();
             agent.SetDestination(basePosition, () => spawner.Release(this));
         }

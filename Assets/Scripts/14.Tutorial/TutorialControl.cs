@@ -4,6 +4,7 @@ using DG.Tweening;
 using Game;
 using Game.Bread;
 using Game.Dining;
+using Game.Money;
 using Player;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -77,6 +78,9 @@ namespace Tutorial
             yield return GoCounterTutorial();
             yield return GoDineInRoomTutorial();
             yield return GoEmptyTutorial();
+            
+            playerArrow.gameObject.SetActive(false);
+            targetArrow.gameObject.SetActive(false);
         }
 
         private IEnumerator GoBreadGenerateTutorial()
@@ -85,7 +89,7 @@ namespace Tutorial
             var player = FindObjectOfType<PlayerBase>();
             SetTargetTutorial(breadGenerate.transform);
 
-            yield return new WaitUntil(() => player.hasBreadStack.Count != 0);
+            yield return new WaitUntil(() => player.breadContainer.Count != 0);
         }
 
         private IEnumerator GoDisplayStandTutorial()
@@ -93,7 +97,7 @@ namespace Tutorial
             var displayStand = FindObjectOfType<DisplayStand>();
             SetTargetTutorial(displayStand.transform);
 
-            yield return new WaitUntil(() => displayStand.hasBreadStack.Count != 0);
+            yield return new WaitUntil(() => displayStand.breadContainer.HasBread);
         }
 
         private IEnumerator GoCounterTutorial()
@@ -116,6 +120,9 @@ namespace Tutorial
         {
             SetTargetTutorial(emptyTransform);
             yield return SetCameraMove(emptyTransform);
+
+            var buyArea = emptyTransform.GetComponent<BuyArea>();
+            yield return new WaitUntil(() => buyArea.needMoney.IsMax);
         }
     }
 }

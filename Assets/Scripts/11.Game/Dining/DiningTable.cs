@@ -43,11 +43,12 @@ namespace Game.Dining
             MessUpDiningTable();
 
             int moneyAmount = 0;
-            while (customer.hasBreadStack.TryPop(out var bread))
+            foreach (var bread in customer.breadContainer)
             {
                 moneyAmount += bread.cellMoney;
                 Destroy(bread.gameObject);
             }
+            customer.breadContainer.Clear();
             moneyBundle.InstantiateMoneyRange(moneyAmount * 2, 2);
             
             var effectAudio = SoundManager.Instance.GetEffectSource();

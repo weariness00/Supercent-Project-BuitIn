@@ -8,6 +8,8 @@ public class NavMeshAgentUtil : MonoBehaviour
 {
     [HideInInspector] public NavMeshAgent agent;
 
+    private bool isDestination = false;
+    
     public Vector3 velocity
     {
         get => agent.velocity;
@@ -37,8 +39,12 @@ public class NavMeshAgentUtil : MonoBehaviour
         get => agent.isStopped;
         set => agent.isStopped = value;
     }
-    
-    public bool IsStop => agent.velocity.magnitude < 0.01f;
+
+    public bool IsDestination
+    {
+        get => isDestination;
+        private set => isDestination = value;
+    }
     public bool pathPending => agent.pathPending;
 
     public static implicit operator NavMeshAgent(NavMeshAgentUtil value) => value.agent;
@@ -73,24 +79,27 @@ public class NavMeshAgentUtil : MonoBehaviour
 
     private IEnumerator MoveEnumerator(Vector3[] pathPointList, Action moveDoneEvent)
     {
+        IsDestination = false;
         foreach (var dest in pathPointList)
         {
             agent.SetDestination(dest);
             while (agent.pathPending)
                 yield return null;
-            while (agent.remainingDistance > 0.1f)
+            while (agent.remainingDistance > agent.stoppingDistance)
                 yield return null;
         }
-        
+        IsDestination = true;
         moveDoneEvent?.Invoke();
     }
 
     private IEnumerator MoveDoneEnumerator(Action moveDoneEvent)
     {
+        IsDestination = false;
         while (agent.pathPending)
             yield return null;
-        while (agent.remainingDistance > 0.1f)
+        while (agent.remainingDistance > agent.stoppingDistance)
             yield return null;
+        IsDestination = true;
         moveDoneEvent?.Invoke();
     }
 }

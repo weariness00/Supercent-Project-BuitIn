@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace Util
 {
+    [Serializable]
     public partial class StackUtil<T>
     {
         private Stack<T> stack;

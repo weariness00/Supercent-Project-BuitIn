@@ -29,19 +29,19 @@ namespace Game.Bread
         public void GetBreadMove(Transform targetTransform,  Vector3 offset, Action<BreadBase> onMoveCompleteEvent = null)
         {
             if(isMove) return;
-            isMove = true;
             StartCoroutine(BreadMoveEnumerator(targetTransform, offset, onMoveCompleteEvent, getSound));
         }
         
         public void PutBreadMove(Transform targetTransform,  Vector3 offset, Action<BreadBase> onMoveCompleteEvent = null)
         {
             if(isMove) return;
-            isMove = true;
             StartCoroutine(BreadMoveEnumerator(targetTransform, offset, onMoveCompleteEvent, putSound));
         }
         
         public IEnumerator BreadMoveEnumerator(Transform targetTransform, Vector3 offset, Action<BreadBase> onMoveCompleteEvent, AudioClip sound)
         {
+            isMove = true;
+            
             var originPos = transform.position;
             transform.SetParent(targetTransform, false);
             transform.position = originPos;
