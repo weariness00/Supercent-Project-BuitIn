@@ -2738,11 +2738,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5735534077292751574, guid: 2a5be0b568a4c774ba0fc24c35291f86, type: 3}
   m_PrefabInstance: {fileID: 1096206073}
   m_PrefabAsset: {fileID: 0}
---- !u!198 &952644911 stripped
-ParticleSystem:
-  m_CorrespondingSourceObject: {fileID: 8076463902404956292, guid: 2a5be0b568a4c774ba0fc24c35291f86, type: 3}
-  m_PrefabInstance: {fileID: 1096206073}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &956662588
 GameObject:
   m_ObjectHideFlags: 0
@@ -3085,11 +3080,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1145632908144333103, guid: 2a5be0b568a4c774ba0fc24c35291f86, type: 3}
       propertyPath: playOnAwake
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3236551210255023547, guid: 2a5be0b568a4c774ba0fc24c35291f86, type: 3}
       propertyPath: playOnAwake
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3347696711021428954, guid: 2a5be0b568a4c774ba0fc24c35291f86, type: 3}
       propertyPath: m_Name
@@ -3145,11 +3140,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6699436339849088607, guid: 2a5be0b568a4c774ba0fc24c35291f86, type: 3}
       propertyPath: playOnAwake
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8076463902404956292, guid: 2a5be0b568a4c774ba0fc24c35291f86, type: 3}
       propertyPath: playOnAwake
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2a5be0b568a4c774ba0fc24c35291f86, type: 3}
@@ -5005,7 +5000,6 @@ MonoBehaviour:
   - {fileID: 1768543322}
   - {fileID: 347660939}
   appearRoom: {fileID: 956662588}
-  appearEffect: {fileID: 952644911}
   appearSound: {fileID: 8300000, guid: c499eb7e32ca74942a7f8c8a0e6ee576, type: 3}
 --- !u!65 &1918083241
 BoxCollider:

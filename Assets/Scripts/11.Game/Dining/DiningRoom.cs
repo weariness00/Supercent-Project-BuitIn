@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Customer;
 using DG.Tweening;
@@ -18,8 +19,8 @@ namespace Game.Dining
 
         [Header("Appear 관련")] 
         public GameObject appearRoom;
-        public ParticleSystem appearEffect;
         public AudioClip appearSound;
+        private static readonly int XOffsetByHeightValue = Shader.PropertyToID("_XOffsetByHeightValue");
 
         public void OnDestroy()
         {
@@ -29,16 +30,26 @@ namespace Game.Dining
         public void Appear()
         {
             appearRoom.SetActive(true);
-            Sequence sequence = DOTween.Sequence();
-            sequence.Append(transform.DORotate(new Vector3(0, 0, -45), 0.5f).SetEase(Ease.OutQuad)); // 오른쪽 45도 기울기
-            sequence.Join(transform.DOScaleX(1.2f, 0.5f).SetEase(Ease.OutQuad));// 기울어지면서 가로로 늘어나기
-            sequence.Append(transform.DORotate(Vector3.zero, 0.5f).SetEase(Ease.InQuad)); // 원래대로 돌아오기
-            sequence.Join(transform.DOScaleX(1.0f, 0.5f).SetEase(Ease.InQuad)); // 돌아오면서 크기 복구
+            var sequence = DOTween.Sequence();
+            var sequence1 = DOTween.Sequence();
+            var sequence2 = DOTween.Sequence();
+            for (int i = 0; i < appearRoom.transform.childCount; i++)
+            {
+                if (appearRoom.transform.GetChild(i).TryGetComponent(out MeshRenderer meshRenderer))
+                {
+                    foreach (var mat in meshRenderer.materials)
+                    {
+                        sequence1.Join(DOTween.To(() => mat.GetFloat(XOffsetByHeightValue), x => mat.SetFloat(XOffsetByHeightValue, x), 1f, 1f).SetEase(Ease.InOutSine));
+                        sequence2.Join(DOTween.To(() => mat.GetFloat(XOffsetByHeightValue), x => mat.SetFloat(XOffsetByHeightValue, x), 0f, 1f).SetEase(Ease.InOutSine));
+                    }
+                }
+            }
+            sequence.Append(sequence1);
+            sequence.Append(sequence2);
             sequence.Play();
             
             var effectAudio = SoundManager.Instance.GetEffectSource();
             effectAudio.PlayOneShot(appearSound);
-            appearEffect.Play();
         }
 
         public DiningTable GetAvailableTable()
