@@ -17,7 +17,8 @@ namespace Game.Dining
         [Space]
         public MoneyBundle moneyBundle;
         public AudioClip calculateSound;
-        
+
+        [HideInInspector] public bool isMessUp;
         public bool IsAvailable { get; set; } = false;
 
         public void Awake()
@@ -40,8 +41,14 @@ namespace Game.Dining
         {
             breadObject.SetActive(false);
             MessUpDiningTable();
-            foreach (var bread in customer.hasBreadStack)
-                moneyBundle.InstantiateMoney(bread.cellMoney);
+
+            int moneyAmount = 0;
+            while (customer.hasBreadStack.TryPop(out var bread))
+            {
+                moneyAmount += bread.cellMoney;
+                Destroy(bread.gameObject);
+            }
+            moneyBundle.InstantiateMoneyRange(moneyAmount * 2, 2);
             
             var effectAudio = SoundManager.Instance.GetEffectSource();
             effectAudio.PlayOneShot(calculateSound);
@@ -49,18 +56,20 @@ namespace Game.Dining
 
         public void MessUpDiningTable()
         {
+            isMessUp = true;
             trashObject.SetActive(true);
             chair.ChangeMessUpState();
         }
 
         public void CleanUpDiningTable()
         {
-            if(!gameObject.activeInHierarchy) return;
-            
+            if(!gameObject.activeInHierarchy || !isMessUp) return;
+
             cleanUpEffect.Play();
             trashObject.SetActive(false);
             chair.ChangeIdleState();
 
+            isMessUp = false;
             IsAvailable = true;
         }
     }
@@ -68,10 +77,6 @@ namespace Game.Dining
     public partial class DiningTable
     {
         [HideInInspector] public Animator animator;
-
-        private static readonly int GoCleanUp = Animator.StringToHash("Go CleanUp");
-
-        public void SetCleanUp() => animator.SetTrigger(GoCleanUp);
     }
 }
 

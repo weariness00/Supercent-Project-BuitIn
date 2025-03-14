@@ -56,6 +56,8 @@ namespace Customer
                 bread.GetBreadMove(stackTransform, new Vector3(0, (hasBreadStack.Count - 1) * bread.skinnedMeshRenderer.localBounds.extents.y * 2f, 0));
                 if (hasBreadStack.IsMax)
                 {
+                    targetDisplayStand = FindObjectOfType<DisplayStand>();
+                    targetDisplayStand.TryPopCustomer(this);
                     GoCounter();
                 }
             };
@@ -97,20 +99,24 @@ namespace Customer
         {
             isItemSelectionDone = false;
             hasBag = false;
-            type = EnumExtension.Random<CustomerType>();
-            
+            type = EnumExtension.Random<CustomerType>(new []{0.7f, 0.3f});
+            agent.enabled = true;
+
             needBreadValue = needBreadRange.Random();
             hasBreadStack.maxValue = needBreadValue;
             ui.ChangeBreadState(needBreadValue);
             
             if(bag) Destroy(bag.gameObject);
-            
-            targetDisplayStand = FindObjectOfType<DisplayStand>();
-            agent.enabled = true;
-            agent.SetDestination(targetDisplayStand.transform.position);
+
+            GoDisplayStand();
             
             counter = FindObjectOfType<Counter>();
-            
+        }
+
+        public void GoDisplayStand()
+        {
+            targetDisplayStand = FindObjectOfType<DisplayStand>();
+            targetDisplayStand.TryAddCustomer(this);
             agent.stoppingDistance = 1.5f;
         }
 
@@ -158,8 +164,6 @@ namespace Customer
             {
                 agent.enabled = true;
                 diningTable.DoneEat(this);
-                while (hasBreadStack.TryPop(out var bread))
-                    Destroy(bread.gameObject);
                 SetEndSitting();
                 OutShop();
             });

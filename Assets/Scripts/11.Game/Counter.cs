@@ -5,12 +5,11 @@ using Game.Dining;
 using Game.Money;
 using Manager;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Util;
 
 namespace Game
 {
-    public class Counter : MonoBehaviour
+    public partial class Counter : MonoBehaviour
     {
         [Tooltip("계산 사운드")] public AudioClip calculateSound;
         
@@ -33,48 +32,58 @@ namespace Game
         {
             hasTakeOutCustomerQueue.onEnqueueEvent += customer =>
             {
-                MoveToLine(customer, takeOutWaitTransform, hasTakeOutCustomerQueue.Count - 1);
+                MoveToCounter(customer, takeOutWaitTransform, hasTakeOutCustomerQueue.Count - 1);
             };
             hasTakeOutCustomerQueue.onDequeueEvent += customer =>
             {
                 int i = 0;
                 foreach (var c in hasTakeOutCustomerQueue)
                 {
-                    MoveToCounter(c, takeOutWaitTransform, i++);
+                    MoveToLine(c, takeOutWaitTransform, i++);
                 }
             };
             
             hasDiningCustomerQueue.onEnqueueEvent += customer =>
             {
-                MoveToLine(customer, diningWaitTransform, hasDiningCustomerQueue.Count - 1);
+                MoveToCounter(customer, diningWaitTransform, hasDiningCustomerQueue.Count - 1);
             };
             hasDiningCustomerQueue.onDequeueEvent += customer =>
             {
                 int i = 0;
                 foreach (var c in hasDiningCustomerQueue)
                 {
-                    MoveToCounter(c, takeOutWaitTransform, i++);
+                    MoveToLine(c, diningWaitTransform, i++);
                 }
             };
         }
 
         public void MoveToCounter(CustomerBase customer, Transform waitTransform, int index)
         {
-            customer.agent.SetDestination(waitTransform.position + index * customer.agent.radius * waitTransform.forward);
+            var pos1 = transform.forward * 5f;
+            var pos2 = waitTransform.position + index * customer.skinnedMeshRenderer.bounds.extents.z * waitTransform.forward;
+            customer.agent.SetPath(new[]{pos1, pos2}, 
+            () =>
+            {
+                if (index == 0 && customer.type == CustomerType.Dining)
+                {
+                    customer.ui.ChangeDiningState();
+                    diningRoom.CheckInCustomer(customer, () => hasDiningCustomerQueue.Dequeue());
+                }
+            });
         }
 
         private void MoveToLine(CustomerBase customer, Transform waitTransform, int index)
         {
-            customer.agent.SetPath(
-                new[]{transform.forward * 5f, waitTransform.position + index * customer.skinnedMeshRenderer.bounds.extents.z * waitTransform.forward},
-                () =>
+            var pos = waitTransform.position + index * customer.skinnedMeshRenderer.bounds.extents.z * waitTransform.forward;
+            customer.agent.SetDestination(pos, 
+            () =>
+            {
+                if (index == 0 && customer.type == CustomerType.Dining)
                 {
-                    if (index == 0 && customer.type == CustomerType.Dining)
-                    {
-                        customer.ui.ChangeDiningState();
-                        diningRoom.CheckInCustomer(customer, () => hasDiningCustomerQueue.Dequeue());
-                    }
-                });
+                    customer.ui.ChangeDiningState();
+                    diningRoom.CheckInCustomer(customer, () => hasDiningCustomerQueue.Dequeue());
+                }
+            });
         }
         
         public void Calculate()
@@ -111,15 +120,23 @@ namespace Game
             var effectAudio = SoundManager.Instance.GetEffectSource();
             effectAudio.PlayOneShot(calculateSound);
             
-            var moneySpawnCount = moneyAmount / 3 + 1;
-            var moneyInterval = 3;
-            for (int i = 0; i < moneySpawnCount; i++)
-            {
-                int addedAmount = Math.Min(moneyInterval, moneyAmount);
-                moneyAmount -= addedAmount;
-                moneyBundle.InstantiateMoney(addedAmount);
-            }
+            moneyBundle.InstantiateMoneyRange(moneyAmount, 2);
             isCalculateTakeOut = false;
+        }
+    }
+    public partial class Counter : IArea
+    {
+        [Header("Area 관련")]
+        [SerializeField] private GameObject area2DObject;
+        public GameObject Area2DObject { get; set; }
+        public void AreaEnter()
+        {
+            area2DObject.transform.localScale = Vector3.one * 1.1f;
+        }
+
+        public void AreaExit()
+        {
+            area2DObject.transform.localScale = Vector3.one;
         }
     }
 }

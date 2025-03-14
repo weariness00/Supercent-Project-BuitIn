@@ -23,6 +23,7 @@ namespace Game.Money
                 },
                 money =>
                 {
+                    GameManager.Instance.droppedMoney -= money.moneyAmount;
                     money.gameObject.SetActive(false);
                     activeMoneyList.Remove(money);
                 },
@@ -37,6 +38,18 @@ namespace Game.Money
         {
             var money = moneyPool.Get();
             money.moneyAmount = moneyAmount;
+            GameManager.Instance.droppedMoney += money.moneyAmount;
+        }
+
+        public void InstantiateMoneyRange(int moneyAmount, int intervalAmount)
+        {
+            var moneySpawnCount = moneyAmount / intervalAmount + 1;
+            for (int i = 0; i < moneySpawnCount; i++)
+            {
+                int addedAmount = Mathf.Min(intervalAmount, moneyAmount);
+                moneyAmount -= addedAmount;
+                InstantiateMoney(addedAmount);
+            }
         }
     }
 }

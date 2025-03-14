@@ -48,6 +48,8 @@ namespace Player
             {
                 delayPushPop.SetMin();
                 moneyDelayTimer.SetMin();
+                if (other.TryGetComponent(out IArea area))
+                    area.AreaEnter();
             }
         }
 
@@ -90,7 +92,7 @@ namespace Player
                 var m = moneyBundle.activeMoneyList.FirstOrDefault();
                 var money = Instantiate(m, moneyBundle.transform.position, Quaternion.identity);
                 money.transform.localScale = m.transform.lossyScale;
-                money.MoneyMove(transform, Vector3.up);
+                money.GetMoneyMove(transform, Vector3.up);
                 UserManager.Instance.userData.money.Value += money.moneyAmount;
                 moneyBundle.moneyPool.Release(m);
             }
@@ -105,6 +107,15 @@ namespace Player
                 other.TryGetComponent(out DiningRoom diningRoom))
             {
                 diningRoom.CleanUpRoom();
+            }
+        }
+        
+        public void OnTriggerExit(Collider other)
+        {
+            if (other.gameObject.layer == LayerMask.NameToLayer("Area"))
+            {
+                if (other.TryGetComponent(out IArea area))
+                    area.AreaExit();
             }
         }
     }

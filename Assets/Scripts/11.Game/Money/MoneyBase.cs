@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Manager;
 using UnityEngine;
 using User;
 using Util;
@@ -10,12 +11,19 @@ namespace Game.Money
         public int moneyAmount = 3;
         public MinMaxValue<float> moveTimer = new(0,0,0.1f);
 
-        public void MoneyMove(Transform targetTransform ,Vector3 offset)
+        public AudioClip getSound;
+
+        public void GetMoneyMove(Transform targetTransform ,Vector3 offset)
         {
-            StartCoroutine(MoneyMoveEnumerator(targetTransform, offset));
+            StartCoroutine(MoneyMoveEnumerator(targetTransform, offset, getSound));
         }
         
-        private IEnumerator MoneyMoveEnumerator(Transform targetTransform, Vector3 offset)
+        public void PutMoneyMove(Transform targetTransform,Vector3 offset)
+        {
+            StartCoroutine(MoneyMoveEnumerator(targetTransform, offset, null));
+        }
+        
+        private IEnumerator MoneyMoveEnumerator(Transform targetTransform, Vector3 offset, AudioClip sound)
         {
             var originPos = transform.position;
             transform.SetParent(targetTransform, false);
@@ -37,6 +45,14 @@ namespace Game.Money
             transform.position = targetTransform.position;
             transform.eulerAngles = targetTransform.eulerAngles;
 
+            if (sound)
+            {
+                var effectAudio = SoundManager.Instance.GetEffectSource();
+                effectAudio.pitch = 2f;
+                effectAudio.PlayOneShot(sound);
+                effectAudio.pitch = 1f;
+            }
+            
             Destroy(gameObject);
         }
     }

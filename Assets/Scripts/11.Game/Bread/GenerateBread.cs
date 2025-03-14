@@ -5,7 +5,7 @@ using Util;
 
 namespace Game.Bread
 {
-    public class GenerateBread : MonoBehaviour
+    public partial class GenerateBread : MonoBehaviour
     {
         public BreadSpawner breadSpawner;
         public StackUtil<BreadBase> hasBreadStack = new(10, true);
@@ -30,6 +30,22 @@ namespace Game.Bread
                 bread.rigidbody.detectCollisions = false;
                 bread.collider.enabled = false;
             };
+        }
+    }
+
+    public partial class GenerateBread : IArea
+    {
+        [Header("Area 관련")]
+        [SerializeField] private GameObject area2DObject;
+        public GameObject Area2DObject { get; set; }
+        public void AreaEnter()
+        {
+            area2DObject.transform.localScale = Vector3.one * 1.1f;
+        }
+
+        public void AreaExit()
+        {
+            area2DObject.transform.localScale = Vector3.one;
         }
     }
 }

@@ -51,7 +51,7 @@ namespace Game.Money
                         needMoney.Current -= addedMoney;
                         moneyAmountText.text = needMoney.Current.ToString();
                         var money = Instantiate(moneyPrefab, other.transform.position, other.transform.rotation);
-                        money.MoneyMove(transform, Vector3.zero);
+                        money.PutMoneyMove(transform, Vector3.zero);
 
                         Buy();  
                     }

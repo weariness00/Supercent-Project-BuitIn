@@ -101,7 +101,7 @@ namespace Tutorial
             var counter = FindObjectOfType<Counter>();
             SetTargetTutorial(counter.transform);
 
-            yield return new WaitUntil(() => UserManager.Instance.userData.money.Value >= 30);
+            yield return new WaitUntil(() => UserManager.Instance.userData.money.Value + GameManager.Instance.droppedMoney >= 30);
         }
 
         private IEnumerator GoDineInRoomTutorial()

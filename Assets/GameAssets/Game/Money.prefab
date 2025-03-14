@@ -97,3 +97,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moneyAmount: 3
+  moveTimer:
+    _min: 0
+    _max: 0.1
+    _current: 0
+    _isMin: 1
+    _isMax: 0
+    isOverMax: 0
+    isOverMin: 0
+  getSound: {fileID: 8300000, guid: 0308d7276b721664f8c895d481b4dd36, type: 3}
