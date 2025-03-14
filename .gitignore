@@ -107,10 +107,5 @@ crashlytics-build.properties
 *.merge.txt
 
 # Gradle cache
-.gradle/
-Neglect/UserSettings/Layouts/default-2022.dwlt
-Neglect/Assets/Feel/NiceVibrations/OlderVersions/v1.7/NiceVibrations-v-1-7.unitypackage.meta
-Neglect/Assets/Feel/NiceVibrations/OlderVersions/v2.0.1/NiceVibrations-v-2-0-1.unitypackage.meta
-Neglect/Assets/Feel/NiceVibrations/OlderVersions/v3.9/NiceVibrations-v-3-9-0.unitypackage.meta
-
-!dll\ 수정/Unity.InputSystem.pdb
+!/Assets/Scripts/02.User
+!/Assets/Scripts/02.User/*
